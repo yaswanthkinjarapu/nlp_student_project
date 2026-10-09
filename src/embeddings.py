@@ -28,12 +28,12 @@ def prepare_tokenized_sentences(sentences: Sequence[str]) -> list[list[str]]:
         raise TypeError("Provide a list of sentence strings, not a single string.")
     if any(not isinstance(sentence, str) for sentence in sentences):
         raise TypeError("Each sentence must be a text string.")
-    # STUDENT TODO 5.1 — Prepare Tokenized Sentences
-    # Difficulty: ★ Guided | Student scaffold. Goal: reuse preprocessing.
+    # STUDENT TODO BOUNDARY 5.1 — Prepare Tokenized Sentences
+    # Difficulty: ★ Guided | Complete reference. Goal: reuse preprocessing.
     # Expected: Non-empty token lists. Hint: apply the three existing operations.
     # BEGIN STUDENT CORE 5.1
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 5.1: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    tokenized = [tokenize_words(remove_punctuation(lowercase_text(text))) for text in sentences]
+    return [tokens for tokens in tokenized if tokens]
     # END STUDENT CORE 5.1
 
 
@@ -63,12 +63,13 @@ def train_word2vec(tokenized_sentences, vector_size=DEFAULT_WORD2VEC["vector_siz
     counts = Counter(token for sentence in tokenized_sentences for token in sentence)
     if sum(count >= min_count for count in counts.values()) < 2:
         raise ValueError("Training needs at least two retained vocabulary words. Add sentences or lower min_count.")
-    # STUDENT TODO 5.2 — Train a Tiny Word2Vec Model
-    # Difficulty: ★★ Core | Student scaffold. Goal: configure Gensim, not its optimizer.
+    # STUDENT TODO BOUNDARY 5.2 — Train a Tiny Word2Vec Model
+    # Difficulty: ★★ Core | Complete reference. Goal: configure Gensim, not its optimizer.
     # Expected: Trained Word2Vec model. Hint: pass sentence lists and architecture sg.
     # BEGIN STUDENT CORE 5.2
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 5.2: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return Word2Vec(sentences=tokenized_sentences, vector_size=vector_size, window=window,
+                    min_count=min_count, sg=sg, epochs=epochs, seed=seed,
+                    hashfxn=_stable_hash, **TRAINING_SETTINGS)
     # END STUDENT CORE 5.2
 
 
@@ -82,12 +83,11 @@ def _require_word(model, word: str) -> None:
 def get_word_vector(model, word: str) -> list[float]:
     """Retrieve a copy as a list, suitable for existing manual cosine functions."""
     _require_word(model, word)
-    # STUDENT TODO 5.3 — Retrieve a Word Vector
-    # Difficulty: ★ Guided | Student scaffold. Goal: access keyed vectors.
+    # STUDENT TODO BOUNDARY 5.3 — Retrieve a Word Vector
+    # Difficulty: ★ Guided | Complete reference. Goal: access keyed vectors.
     # Expected: vector_size finite floats. Hint: word indexing uses model.wv.
     # BEGIN STUDENT CORE 5.3
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 5.3: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return model.wv[word].tolist()
     # END STUDENT CORE 5.3
 
 
@@ -99,12 +99,11 @@ def find_similar_words(model, word: str, top_n: int = 5) -> list[tuple[str, floa
     count = min(top_n, len(model.wv) - 1)
     if count == 0:
         return []
-    # STUDENT TODO 5.4 — Find Similar Words
-    # Difficulty: ★★ Core | Student scaffold. Goal: query learned vector geometry.
+    # STUDENT TODO BOUNDARY 5.4 — Find Similar Words
+    # Difficulty: ★★ Core | Complete reference. Goal: query learned vector geometry.
     # Expected: (word, cosine) pairs. Hint: use the keyed-vector nearest-word method.
     # BEGIN STUDENT CORE 5.4
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 5.4: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return model.wv.most_similar(word, topn=count)
     # END STUDENT CORE 5.4
 
 
@@ -112,13 +111,12 @@ def calculate_word_similarity(model, word_a: str, word_b: str) -> float:
     """Reuse Task 06 manual cosine over the retrieved word vectors."""
     vector_a = get_word_vector(model, word_a)
     vector_b = get_word_vector(model, word_b)
-    # STUDENT TODO 5.5 — Calculate Word Similarity
-    # Difficulty: ★★ Core | Student scaffold. Goal: connect embeddings to cosine.
+    # STUDENT TODO BOUNDARY 5.5 — Calculate Word Similarity
+    # Difficulty: ★★ Core | Complete reference. Goal: connect embeddings to cosine.
     # Expected: Manual cosine, approximately Gensim's similarity.
     # Hint: the representation changed, not the comparison formula.
     # BEGIN STUDENT CORE 5.5
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 5.5: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return cosine_similarity(vector_a, vector_b)
     # END STUDENT CORE 5.5
 
 
@@ -159,13 +157,13 @@ def encode_sentences(model, sentences: Sequence[str]):
         raise ValueError("Blank sentences have no useful meaning; enter non-empty text.")
     if not sentences:
         return np.empty((0, EMBEDDING_DIMENSION), dtype=np.float32)
-    # STUDENT TODO 6.1 — Encode Sentences
-    # Difficulty: ★★ Core | Student scaffold; model loading is starter code.
+    # STUDENT TODO BOUNDARY 6.1 — Encode Sentences
+    # Difficulty: ★★ Core | Complete reference; model loading is starter code.
     # Goal: turn each complete text into one vector. Expected: N rows × 384 columns.
     # Hint: use the provided model's batch encoder, not Word2Vec or token lists.
     # BEGIN STUDENT CORE 6.1
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 6.1: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    vectors = model.encode(list(sentences), batch_size=32, show_progress_bar=False,
+                           convert_to_numpy=True, normalize_embeddings=False)
     # END STUDENT CORE 6.1
     if vectors.shape != (len(sentences), EMBEDDING_DIMENSION) or not np.isfinite(vectors).all():
         raise ValueError("The shared encoder must return finite N × 384 embeddings.")
@@ -174,13 +172,15 @@ def encode_sentences(model, sentences: Sequence[str]):
 
 def sentence_similarity(model, sentence_a: str, sentence_b: str) -> float:
     """Encode two complete texts, then reuse Exercise 4 manual cosine."""
-    # STUDENT TODO 6.2 — Calculate Sentence Similarity
-    # Difficulty: ★★ Core | Student scaffold. Goal: representation changes only.
+    # STUDENT TODO BOUNDARY 6.2 — Calculate Sentence Similarity
+    # Difficulty: ★★ Core | Complete reference. Goal: representation changes only.
     # Expected: cosine score, not a probability or factual correctness measure.
     # Hint: batch the two texts, take the two rows, reuse existing manual cosine.
     # BEGIN STUDENT CORE 6.2
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 6.2: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    embeddings = encode_sentences(model, [sentence_a, sentence_b])
+    vector_a = embeddings[0].tolist()
+    vector_b = embeddings[1].tolist()
+    return cosine_similarity(vector_a, vector_b)
     # END STUDENT CORE 6.2
 
 

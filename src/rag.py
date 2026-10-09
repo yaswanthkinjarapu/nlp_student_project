@@ -22,14 +22,16 @@ def format_source_block(chunk, source_number):
     _validate_chunks([chunk])
     if isinstance(source_number,bool) or not isinstance(source_number,int) or source_number<1:
         raise ValueError('source_number must be a positive integer.')
-    # STUDENT TODO 12.2 — Preserve Source Labels in Context
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 12.2 — Preserve Source Labels in Context
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: retain identity and page provenance beside unchanged text.
     # Expected: [SOURCE n], source fields, blank line, verbatim evidence.
     # Hint: Markdown page is N/A; PDF page is its physical number.
     # BEGIN STUDENT CORE 12.2
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 12.2: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    page = 'N/A' if chunk['page_number'] is None else str(chunk['page_number'])
+    return (f"[SOURCE {source_number}]\nDocument: {chunk['document_title']}\n"
+            f"Document ID: {chunk['document_id']}\nChunk ID: {chunk['chunk_id']}\n"
+            f"Page: {page}\n\n" + chunk['text'])
     # END STUDENT CORE 12.2
 
 
@@ -40,13 +42,13 @@ def build_context(retrieved_chunks):
     line with a separator makes block boundaries visible. Empty input returns ''.
     """
     _validate_chunks(retrieved_chunks)
-    # STUDENT TODO 12.1 — Combine Retrieved Chunks Into Context
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 12.1 — Combine Retrieved Chunks Into Context
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: keep order and readable boundaries. Expected: one context string.
     # Hint: label each selected item using the shared source-block function.
     # BEGIN STUDENT CORE 12.1
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 12.1: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    blocks = [format_source_block(chunk, number) for number, chunk in enumerate(retrieved_chunks, start=1)]
+    return '\n\n---\n\n'.join(blocks)
     # END STUDENT CORE 12.1
 
 
@@ -87,14 +89,16 @@ def build_grounded_prompt(question, context):
         raise ValueError('Enter a non-empty question.')
     if not isinstance(context,str):
         raise TypeError('Context must be a text string.')
-    # STUDENT TODO 12.3 — Build a Grounded Prompt
-    # Difficulty: ★★★ Challenge | Student scaffold.
+    # STUDENT TODO BOUNDARY 12.3 — Build a Grounded Prompt
+    # Difficulty: ★★★ Challenge | Complete reference implementation.
     # Goal: combine rules, evidence and question without changing evidence.
     # Expected: visible INSTRUCTIONS / CONTEXT / QUESTION / ANSWER sections.
     # Hint: use the provided rules and explicit beginning/end evidence markers.
     # BEGIN STUDENT CORE 12.3
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 12.3: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    evidence = context if context else '[NO RETRIEVED EVIDENCE]'
+    return (f"INSTRUCTIONS\n{GROUNDING_INSTRUCTIONS}\n\n"
+            f"CONTEXT\n<BEGIN_EVIDENCE>\n{evidence}\n<END_EVIDENCE>\n\n"
+            f"QUESTION\n{question}\n\nANSWER\n")
     # END STUDENT CORE 12.3
 
 

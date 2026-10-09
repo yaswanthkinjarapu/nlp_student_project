@@ -19,11 +19,10 @@ def score_documents(query_vector, document_vectors) -> list[float]:
     _validate_vector(query_vector)
     for vector in document_vectors:
         _validate_vector(vector, len(query_vector))
-    # STUDENT TODO 4.2 — Query-Document Similarities
+    # STUDENT TODO BOUNDARY 4.2 — Query-Document Similarities
     # Difficulty: ★★ Core | Reference complete. Hint: reuse manual cosine.
     # BEGIN STUDENT CORE 4.2
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 4.2: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return [cosine_similarity(query_vector, vector) for vector in document_vectors]
     # END STUDENT CORE 4.2
 
 
@@ -36,11 +35,11 @@ def rank_documents(documents: list[dict], scores: list[float], top_k: int = 3) -
     _validate_vector(scores, len(documents))
     if isinstance(top_k, bool) or not isinstance(top_k, int) or top_k < 0:
         raise ValueError("top_k must be a non-negative integer.")
-    # STUDENT TODO 4.3 — Rank Documents
+    # STUDENT TODO BOUNDARY 4.3 — Rank Documents
     # Difficulty: ★★ Core | Reference complete. Hint: Python sorting is stable.
     # BEGIN STUDENT CORE 4.3
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 4.3: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    positions = sorted(range(len(documents)), key=lambda position: scores[position], reverse=True)
+    return [{**documents[position], "score": float(scores[position])} for position in positions[:top_k]]
     # END STUDENT CORE 4.3
 
 
@@ -88,12 +87,12 @@ def encode_corpus_documents(model, documents: list[dict]):
     """
     from src.embeddings import encode_sentences
     _validate_search_documents(documents)
-    # STUDENT TODO 7.1 — Encode Corpus Documents
-    # Difficulty: ★★ Core | Student scaffold. Expected: one row per document.
+    # STUDENT TODO BOUNDARY 7.1 — Encode Corpus Documents
+    # Difficulty: ★★ Core | Complete reference. Expected: one row per document.
     # Goal: reuse the sentence encoder on text fields. Hint: preserve row order.
     # BEGIN STUDENT CORE 7.1
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 7.1: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    texts = [document["text"] for document in documents]
+    return encode_sentences(model, texts)
     # END STUDENT CORE 7.1
 
 
@@ -104,12 +103,11 @@ def encode_search_query(model, query: str) -> list[float]:
         raise TypeError("The search query must be a text string.")
     if not query.strip():
         raise ValueError("Enter a non-empty search query before encoding.")
-    # STUDENT TODO 7.2 — Encode Search Query
-    # Difficulty: ★ Guided | Student scaffold. Goal: use the corpus encoder.
+    # STUDENT TODO BOUNDARY 7.2 — Encode Search Query
+    # Difficulty: ★ Guided | Complete reference. Goal: use the corpus encoder.
     # Expected: 384 floats, not a (1,384) batch. Hint: take the first encoded row.
     # BEGIN STUDENT CORE 7.2
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 7.2: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return encode_sentences(model, [query])[0].tolist()
     # END STUDENT CORE 7.2
 
 
@@ -135,12 +133,11 @@ def calculate_semantic_similarities(query_vector, document_embeddings) -> list[f
     from src.sentence_resources import EMBEDDING_DIMENSION
     _validate_vector(query_vector, EMBEDDING_DIMENSION)
     matrix = _semantic_matrix(document_embeddings)
-    # STUDENT TODO 7.3 — Calculate Semantic Similarities
-    # Difficulty: ★★ Core | Student scaffold. Goal: query versus every row.
+    # STUDENT TODO BOUNDARY 7.3 — Calculate Semantic Similarities
+    # Difficulty: ★★ Core | Complete reference. Goal: query versus every row.
     # Expected: N cosine scores. Hint: reuse existing score_documents/manual cosine.
     # BEGIN STUDENT CORE 7.3
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 7.3: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return score_documents(query_vector, matrix.tolist())
     # END STUDENT CORE 7.3
 
 
@@ -151,12 +148,11 @@ def retrieve_semantic_results(documents: list[dict], scores: list[float], top_k:
     Even unrelated queries produce nearest results. Scores are not confidence.
     """
     _validate_search_documents(documents)
-    # STUDENT TODO 7.4 — Retrieve Top-K Semantic Results
-    # Difficulty: ★★ Core | Student scaffold. Goal: reuse deterministic ranking.
+    # STUDENT TODO BOUNDARY 7.4 — Retrieve Top-K Semantic Results
+    # Difficulty: ★★ Core | Complete reference. Goal: reuse deterministic ranking.
     # Expected: copied metadata plus score. Hint: the ranking operation is unchanged.
     # BEGIN STUDENT CORE 7.4
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 7.4: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return rank_documents(documents, scores, top_k)
     # END STUDENT CORE 7.4
 
 
@@ -235,35 +231,33 @@ def encode_document_chunks(model, chunks):
     """
     from src.embeddings import encode_sentences
     _validate_chunks(chunks)
-    # STUDENT TODO 11.1 — Encode Document Chunks
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 11.1 — Encode Document Chunks
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: one row per passage. Expected: N × 384; never encode metadata.
     # Hint: extract text fields in order and reuse the batch sentence encoder.
     # BEGIN STUDENT CORE 11.1
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 11.1: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    texts = [chunk["text"] for chunk in chunks]
+    return encode_sentences(model, texts)
     # END STUDENT CORE 11.1
 
 
 def encode_user_question(model, question):
     """Same model/vector space as chunks; reject blank questions."""
-    # STUDENT TODO 11.2 — Encode the User Question
-    # Difficulty: ★ Guided | Student scaffold.
+    # STUDENT TODO BOUNDARY 11.2 — Encode the User Question
+    # Difficulty: ★ Guided | Complete reference implementation.
     # Goal: one 384-dimensional vector. Hint: reuse the existing query encoder.
     # BEGIN STUDENT CORE 11.2
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 11.2: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return encode_search_query(model, question)
     # END STUDENT CORE 11.2
 
 
 def calculate_chunk_similarities(question_vector, chunk_embeddings):
     """One existing manual cosine per row; zero vectors safely score zero."""
-    # STUDENT TODO 11.3 — Calculate Question-Chunk Similarities
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 11.3 — Calculate Question-Chunk Similarities
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: preserve row/score alignment. Hint: reuse semantic cosine scoring.
     # BEGIN STUDENT CORE 11.3
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 11.3: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return calculate_semantic_similarities(question_vector, chunk_embeddings)
     # END STUDENT CORE 11.3
 
 
@@ -274,12 +268,12 @@ def retrieve_top_k_chunks(chunks, scores, top_k=5):
     Ranking always finds nearest neighbors, even if none are relevant.
     """
     _validate_chunks(chunks)
-    # STUDENT TODO 11.4 — Retrieve Top-K Evidence Chunks
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 11.4 — Retrieve Top-K Evidence Chunks
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: keep source metadata. Hint: shared ranking, then one-based ranks.
     # BEGIN STUDENT CORE 11.4
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 11.4: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    ranked = rank_documents(chunks, scores, top_k)
+    return [{**chunk, "rank": rank} for rank, chunk in enumerate(ranked, start=1)]
     # END STUDENT CORE 11.4
 
 

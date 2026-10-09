@@ -1,7 +1,7 @@
 """Exercise 10: conservative cleaning, word windows and truthful provenance.
 
 Markdown/PDF loading, offsets and statistics are starter infrastructure. Four
-small bounded cores remain Student scaffolds. No embeddings,
+small bounded cores remain complete reference implementations. No embeddings,
 retrieval, generation, Streamlit, OCR or model loading belongs in this module.
 """
 from io import BytesIO
@@ -91,13 +91,14 @@ def clean_document_text(text):
     """
     if not isinstance(text, str):
         raise TypeError("Document text must be a string.")
-    # STUDENT TODO 10.1 — Clean Extracted Text
-    # Difficulty: ★ Guided | Student scaffold.
+    # STUDENT TODO BOUNDARY 10.1 — Clean Extracted Text
+    # Difficulty: ★ Guided | Complete reference implementation.
     # Goal: normalize whitespace, not language. Expected: readable natural text.
     # Hint: normalize line endings, then horizontal spaces and blank lines.
     # BEGIN STUDENT CORE 10.1
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 10.1: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    lines = [re.sub(r"[^\S\n]+", " ", line).strip() for line in text.split("\n")]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
     # END STUDENT CORE 10.1
 
 
@@ -132,13 +133,13 @@ def split_text_into_chunks(text, chunk_size=DEFAULT_CHUNK_SIZE):
     """
     _chunk_settings(chunk_size)
     spans = _word_spans(text)
-    # STUDENT TODO 10.2 — Split Text Into Chunks
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 10.2 — Split Text Into Chunks
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: cover all words in size-word steps. Expected: ordered word windows.
     # Hint: starts are 0, size, 2*size; the starter helper records exact offsets.
     # BEGIN STUDENT CORE 10.2
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 10.2: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return [_word_window(text, spans, start, chunk_size)
+            for start in range(0, len(spans), chunk_size)]
     # END STUDENT CORE 10.2
 
 
@@ -153,14 +154,22 @@ def create_overlapping_chunks(text, chunk_size=DEFAULT_CHUNK_SIZE, overlap=DEFAU
     if overlap == 0:
         return split_text_into_chunks(text, chunk_size)
     spans = _word_spans(text)
-    # STUDENT TODO 10.3 — Add Chunk Overlap
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 10.3 — Add Chunk Overlap
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: retain shared boundary words. Formula: step = chunk_size - overlap.
     # Expected: progressing windows including final partial text.
     # Hint: stop after a window includes the last word; avoid redundant tails.
     # BEGIN STUDENT CORE 10.3
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 10.3: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    step = chunk_size - overlap
+    chunks = []
+    start = 0
+    while start < len(spans):
+        chunk = _word_window(text, spans, start, chunk_size)
+        chunks.append(chunk)
+        if chunk["word_end"] == len(spans):
+            break
+        start += step
+    return chunks
     # END STUDENT CORE 10.3
 
 
@@ -183,13 +192,18 @@ def attach_chunk_metadata(chunks, document, *, page_number=None, start_index=0):
         raise ValueError("Markdown does not have physical page numbers.")
     if document["source_type"] == "pdf" and (isinstance(page_number, bool) or not isinstance(page_number, int) or page_number < 1):
         raise ValueError("PDF chunks require a positive physical page number.")
-    # STUDENT TODO 10.4 — Attach Chunk Metadata
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 10.4 — Attach Chunk Metadata
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: keep source provenance. Expected: labeled chunks with stable IDs.
     # Hint: combine document identity, running index, page and window boundaries.
     # BEGIN STUDENT CORE 10.4
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 10.4: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    labeled = []
+    for index, chunk in enumerate(chunks, start=start_index):
+        labeled.append({**chunk, "chunk_id": f"{document['document_id']}::chunk_{index:03d}",
+                        "document_id": document["document_id"], "document_title": document["title"],
+                        "chunk_index": index, "source_type": document["source_type"],
+                        "source_path": document["source_path"], "page_number": page_number})
+    return labeled
     # END STUDENT CORE 10.4
 
 

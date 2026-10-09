@@ -18,13 +18,13 @@ def _validate_documents(documents: Sequence[Sequence[str]]) -> None:
 def build_vocabulary(documents: Sequence[Sequence[str]]) -> list[str]:
     """Return sorted corpus vocabulary, reusing Exercise 1's unique-token utility."""
     _validate_documents(documents)
-    # STUDENT TODO 2.1 — Multi-document Vocabulary
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 2.1 — Multi-document Vocabulary
+    # Difficulty: ★★ Core | Complete working reference.
     # Goal: Combine tokens. Expected: Sorted unique terms.
     # Hint: Flatten one level, not characters.
     # BEGIN STUDENT CORE 2.1
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 2.1: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    tokens = [token for document in documents for token in document]
+    return unique_tokens(tokens)
     # END STUDENT CORE 2.1
 
 
@@ -47,13 +47,14 @@ def one_hot_encode(word: str, vocabulary: Sequence[str]) -> list[int]:
     _validate_tokens([word])
     index = create_vocabulary_index(vocabulary)
     _require_known([word], index)
-    # STUDENT TODO 2.2 — One-Hot Encoding
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 2.2 — One-Hot Encoding
+    # Difficulty: ★★ Core | Complete working reference.
     # Goal: Activate this word's coordinate. Expected: Integer list.
     # Hint: Start with zeros, then use the index.
     # BEGIN STUDENT CORE 2.2
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 2.2: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    vector = [0] * len(vocabulary)
+    vector[index[word]] = 1
+    return vector
     # END STUDENT CORE 2.2
 
 
@@ -62,13 +63,15 @@ def bag_of_words(tokens: Sequence[str], vocabulary: Sequence[str]) -> list[int]:
     _validate_tokens(tokens)
     index = create_vocabulary_index(vocabulary)
     _require_known(tokens, index)
-    # STUDENT TODO 2.3 — Manual Bag of Words
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 2.3 — Manual Bag of Words
+    # Difficulty: ★★ Core | Complete working reference.
     # Goal: Count repetitions. Expected: Counts with zeros for absent terms.
     # Hint: Each token contributes one; do not rebuild the vocabulary.
     # BEGIN STUDENT CORE 2.3
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 2.3: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    vector = [0] * len(vocabulary)
+    for token in tokens:
+        vector[index[token]] += 1
+    return vector
     # END STUDENT CORE 2.3
 
 
@@ -88,13 +91,12 @@ def generate_ngrams(tokens: Sequence[str], n: int) -> list[tuple[str, ...]]:
     _validate_tokens(tokens)
     if isinstance(n, bool) or not isinstance(n, int) or n <= 0:
         raise ValueError("n must be a positive integer (1, 2, 3, ...).")
-    # STUDENT TODO 2.4 — Sliding-Window N-Grams
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 2.4 — Sliding-Window N-Grams
+    # Difficulty: ★★ Core | Complete working reference.
     # Goal: Visit complete windows. Expected: Ordered tuples.
     # Hint: Last start is len(tokens) - n; keep documents separate.
     # BEGIN STUDENT CORE 2.4
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 2.4: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return [tuple(tokens[start:start + n]) for start in range(len(tokens) - n + 1)]
     # END STUDENT CORE 2.4
 
 
@@ -120,22 +122,20 @@ def countvectorizer_matrix(documents: Sequence[Sequence[str]], vocabulary: Seque
 def calculate_tf(tokens: Sequence[str], vocabulary: Sequence[str]) -> list[float]:
     """Normalized TF: count / document token count; empty document gives zeros."""
     counts = bag_of_words(tokens, vocabulary)
-    # STUDENT TODO 3.1 — Term Frequency
+    # STUDENT TODO BOUNDARY 3.1 — Term Frequency
     # Difficulty: ★★ Core | Reference complete. Hint: normalize existing counts.
     # BEGIN STUDENT CORE 3.1
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 3.1: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return [count / len(tokens) if tokens else 0.0 for count in counts]
     # END STUDENT CORE 3.1
 
 
 def calculate_df(documents: Sequence[Sequence[str]], vocabulary: Sequence[str]) -> list[int]:
     """Count documents containing each term, not total term occurrences."""
     counts = build_document_term_matrix(documents, vocabulary)
-    # STUDENT TODO 3.2 — Document Frequency
+    # STUDENT TODO BOUNDARY 3.2 — Document Frequency
     # Difficulty: ★★ Core | Reference complete. Hint: count positive rows per column.
     # BEGIN STUDENT CORE 3.2
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 3.2: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return [sum(row[column] > 0 for row in counts) for column in range(len(vocabulary))]
     # END STUDENT CORE 3.2
 
 
@@ -148,11 +148,10 @@ def calculate_idf(document_frequencies: Sequence[int], document_count: int) -> l
         raise TypeError("Expected a sequence of document frequencies.")
     if any(isinstance(df, bool) or not isinstance(df, int) or not 1 <= df <= document_count for df in document_frequencies):
         raise ValueError("Each DF must be an integer between 1 and N; omit absent vocabulary terms.")
-    # STUDENT TODO 3.3 — Inverse Document Frequency
+    # STUDENT TODO BOUNDARY 3.3 — Inverse Document Frequency
     # Difficulty: ★★ Core | Reference complete. Hint: natural logarithm of N / DF.
     # BEGIN STUDENT CORE 3.3
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 3.3: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return [math.log(document_count / df) for df in document_frequencies]
     # END STUDENT CORE 3.3
 
 
@@ -172,11 +171,10 @@ def calculate_tfidf(tokens: Sequence[str], vocabulary: Sequence[str], idf: Seque
     """Compose normalized TF × corpus IDF, keeping the supplied column order."""
     _validate_vector(idf, len(vocabulary))
     tf = calculate_tf(tokens, vocabulary)
-    # STUDENT TODO 3.4 — TF-IDF
+    # STUDENT TODO BOUNDARY 3.4 — TF-IDF
     # Difficulty: ★★ Core | Reference complete. Hint: multiply aligned coordinates.
     # BEGIN STUDENT CORE 3.4
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 3.4: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return [frequency * rarity for frequency, rarity in zip(tf, idf)]
     # END STUDENT CORE 3.4
 
 
@@ -197,11 +195,11 @@ def build_query_tfidf_vector(tokens: Sequence[str], vocabulary: Sequence[str], i
     _validate_tokens(tokens)
     index = create_vocabulary_index(vocabulary)
     _validate_vector(idf, len(vocabulary))
-    # STUDENT TODO 3.5 — Query TF-IDF Vector
+    # STUDENT TODO BOUNDARY 3.5 — Query TF-IDF Vector
     # Difficulty: ★★★ Challenge | Reference complete. Hint: filter, then reuse TF-IDF.
     # BEGIN STUDENT CORE 3.5
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 3.5: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    known_tokens = [token for token in tokens if token in index]
+    return calculate_tfidf(known_tokens, vocabulary, idf)
     # END STUDENT CORE 3.5
 
 
@@ -214,11 +212,14 @@ def cosine_similarity(vector_a: Sequence[float], vector_b: Sequence[float], *, e
     import math
     _validate_vector(vector_a)
     _validate_vector(vector_b, len(vector_a))
-    # STUDENT TODO 4.1 — Cosine Similarity
+    # STUDENT TODO BOUNDARY 4.1 — Cosine Similarity
     # Difficulty: ★★ Core | Reference complete. Hint: guard a zero denominator.
     # BEGIN STUDENT CORE 4.1
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 4.1: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    dot_product = sum(a * b for a, b in zip(vector_a, vector_b))
+    magnitude_a = math.sqrt(sum(a * a for a in vector_a))
+    magnitude_b = math.sqrt(sum(b * b for b in vector_b))
+    denominator = magnitude_a * magnitude_b
+    similarity = dot_product / denominator if denominator else 0.0
     # END STUDENT CORE 4.1
     if explain:
         return {"dot_product": dot_product, "magnitude_a": magnitude_a,

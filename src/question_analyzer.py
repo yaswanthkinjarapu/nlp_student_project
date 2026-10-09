@@ -70,13 +70,15 @@ def normalize_question_text(text):
     by matching address normalized text, not original paper bytes.
     """
     if not isinstance(text,str): raise TypeError('Question text must be a string.')
-    # STUDENT TODO 14.1 — Normalize Question Text
-    # Difficulty: ★ Guided | Student scaffold.
+    # STUDENT TODO BOUNDARY 14.1 — Normalize Question Text
+    # Difficulty: ★ Guided | Complete reference implementation.
     # Goal: consistent phrase boundaries while retaining technical words.
     # Hint: casefold, replace separators, then collapse whitespace.
     # BEGIN STUDENT CORE 14.1
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 14.1: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    normalized=unicodedata.normalize('NFKC',text).casefold()
+    normalized=re.sub(r'[^\w\s]|_', ' ',normalized)
+    normalized=re.sub(r'\btfidf\b','tf idf',normalized)
+    return ' '.join(normalized.split())
     # END STUDENT CORE 14.1
 
 
@@ -116,13 +118,18 @@ def match_question_topics(text,taxonomy):
     """
     normalized=normalize_question_text(text)
     rules=compile_topic_rules(taxonomy)
-    # STUDENT TODO 14.2 — Match Questions to Topics and Synonyms
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 14.2 — Match Questions to Topics and Synonyms
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: collect explicit phrase matches and choose a deterministic primary.
     # Hint: word boundaries, narrow topics first, longer phrase, taxonomy ties.
     # BEGIN STUDENT CORE 14.2
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 14.2: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    matches=[]
+    for rule in rules:
+        for occurrence in re.finditer(rule['pattern'],normalized):
+            matches.append({**{k:v for k,v in rule.items() if k!='pattern'},
+                            'matched_phrase':occurrence.group(),'start':occurrence.start(),'end':occurrence.end()})
+    ordered=sorted(matches,key=lambda m:(-m['specificity'],-m['phrase_words'],m['taxonomy_order'],m['start'],m['match_type']!='canonical'))
+    primary=ordered[0] if ordered else None
     # END STUDENT CORE 14.2
     topics=list(dict.fromkeys(m['topic_id'] for m in ordered))
     tied=list(dict.fromkeys(m['topic_id'] for m in ordered if primary and
@@ -143,13 +150,14 @@ def count_topic_frequencies(questions,taxonomy):
     """One primary per record; all canonical topics plus UNMATCHED, including 0."""
     counts={topic['id']:0 for topic in taxonomy};counts[UNMATCHED]=0
     if any(q.get('primary_topic') not in counts for q in questions): raise ValueError('Unknown primary topic assignment.')
-    # STUDENT TODO 14.3 — Count Topic Frequencies
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 14.3 — Count Topic Frequencies
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: each top-level slot increments only its selected primary topic.
     # Hint: initialize counts, then increment the primary key once per record.
     # BEGIN STUDENT CORE 14.3
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 14.3: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    for question in questions:
+        counts[question['primary_topic']]+=1
+    return counts
     # END STUDENT CORE 14.3
 
 
@@ -163,26 +171,26 @@ def rank_topics(counts,taxonomy):
     names={t['id']:t['name'] for t in taxonomy};names[UNMATCHED]='Unmatched'
     if any(key not in order or isinstance(value,bool) or not isinstance(value,int) or value<0 for key,value in counts.items()):
         raise ValueError('Counts need known topic IDs and non-negative integers.')
-    # STUDENT TODO 14.4 — Rank Topics by Frequency
-    # Difficulty: ★ Guided | Student scaffold.
+    # STUDENT TODO BOUNDARY 14.4 — Rank Topics by Frequency
+    # Difficulty: ★ Guided | Complete reference implementation.
     # Goal: most frequent first, deterministic ties.
     # Hint: negative count sorts descending; taxonomy position breaks ties.
     # BEGIN STUDENT CORE 14.4
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 14.4: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    topics=sorted((topic for topic in counts if topic!=UNMATCHED),key=lambda topic:(-counts[topic],order[topic]))
+    return [{'rank':i,'topic_id':topic,'topic_name':names[topic],'count':counts[topic]} for i,topic in enumerate(topics,1)]
     # END STUDENT CORE 14.4
 
 
 def filter_questions_by_topic(questions,topic_id,taxonomy,*,include_secondary=False):
     """Copied records with full provenance; primary-only unless explicitly asked."""
     if topic_id not in {t['id'] for t in taxonomy}|{UNMATCHED}: raise ValueError('Select a canonical topic or UNMATCHED.')
-    # STUDENT TODO 14.5 — Filter Questions by Topic
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 14.5 — Filter Questions by Topic
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: select matching records without stripping IDs/text/explanations.
     # Hint: primary equality; optional explicit secondary-match membership.
     # BEGIN STUDENT CORE 14.5
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 14.5: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    return [dict(q) for q in questions if q['primary_topic']==topic_id or
+            (include_secondary and topic_id in q['matched_topics'])]
     # END STUDENT CORE 14.5
 
 

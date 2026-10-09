@@ -1,6 +1,6 @@
 """Exercises 8–9: transparent attention math and starter task inference.
 
-The three bounded student cores remain Student scaffolds.
+The three bounded student cores remain complete reference implementations.
 Model setup, validation and pretrained inference are provided infrastructure.
 This module never imports Streamlit and never downloads a model.
 """
@@ -35,13 +35,12 @@ def calculate_attention_scores(query, keys):
     keys = _matrix(keys, "Keys")
     if keys.shape[1] != query.size:
         raise ValueError("Query and key dimensions must match.")
-    # STUDENT TODO 8.1 — Calculate Attention Scores
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 8.1 — Calculate Attention Scores
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: compare one query with each key. Formula: score_i = Q · K_i.
     # Expected: one score per key. Hint: calculate a dot product for each row.
     # BEGIN STUDENT CORE 8.1
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 8.1: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    scores = np.array([np.dot(query, key) for key in keys])
     # END STUDENT CORE 8.1
     if not np.isfinite(scores).all():
         raise ValueError("Dot products overflowed; use smaller finite vectors.")
@@ -58,13 +57,15 @@ def softmax_attention_weights(scores):
     scores = _vector(scores, "Scores")
     if scores.size == 0:
         return np.empty(0, dtype=float)
-    # STUDENT TODO 8.2 — Softmax Attention Weights
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 8.2 — Softmax Attention Weights
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: normalize scores. Formula: exp(s_i) / sum(exp(s_j)).
     # Expected: weights summing to one. Hint: shift by the maximum first.
     # BEGIN STUDENT CORE 8.2
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 8.2: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    with np.errstate(over="ignore", under="ignore"):
+        shifted_scores = scores - np.max(scores)
+        exponentials = np.exp(shifted_scores)
+    weights = exponentials / np.sum(exponentials)
     # END STUDENT CORE 8.2
     return weights
 
@@ -83,13 +84,14 @@ def calculate_weighted_context(weights, values):
         raise ValueError("Each weight must correspond to one value row.")
     if np.any(weights < 0) or not np.isclose(weights.sum(), 1.0, atol=1e-8, rtol=1e-7):
         raise ValueError("Attention weights must be non-negative and sum to one.")
-    # STUDENT TODO 8.3 — Weighted Context Representation
-    # Difficulty: ★★ Core | Student scaffold.
+    # STUDENT TODO BOUNDARY 8.3 — Weighted Context Representation
+    # Difficulty: ★★ Core | Complete reference implementation.
     # Goal: combine values. Formula: context = sum(weight_i × V_i).
     # Expected: one vector with the value dimension. Hint: add weighted rows.
     # BEGIN STUDENT CORE 8.3
-    # Implement only this educational core; surrounding setup stays provided.
-    raise NotImplementedError('STUDENT TODO 8.3: implement this exercise in the marked core; see docs/STUDENT_GUIDE.md.')
+    context = np.zeros(values.shape[1])
+    for weight, value in zip(weights, values):
+        context += weight * value
     # END STUDENT CORE 8.3
     if not np.isfinite(context).all():
         raise ValueError("Weighted sum overflowed; use smaller values.")
